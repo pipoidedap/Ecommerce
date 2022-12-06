@@ -1,24 +1,63 @@
-import logo from './logo.svg';
 import './App.css';
+import React, { useState, useEffect } from 'react'
+import Inventory from './components/Inventory';
+import Navbar from './components/Navbar'
+import Searchbar from './components/Searchbar';
+import { getProducts } from './api';
+import { FavoriteProvider } from './contexts/SoldContext';
 
 function App() {
+
+  const [products, setProducts] = useState([])
+
+  const [loading, setLoading] = useState(true)
+  
+  const [sold, setSold] = useState([])
+
+  const fetchProducts = async () => {
+    try {
+      setLoading(true)
+      const data = await getProducts()
+      setProducts(data)
+      setLoading(false)
+    } catch (error) {
+      console.log(error)
+    }
+  }
+
+  useEffect(() => {
+    fetchProducts()
+  }, [])
+
+  const updateSoldProducts = (title) => {
+    const updated = [...sold]
+    const isSold = updated.indexOf(title)
+    if(isSold >= 0) {
+      updated.splice(isSold, 1)
+    } else {
+      updated.push(title)
+    }
+    setSold(updated)
+  }
+
   return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.js</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
-    </div>
+    <FavoriteProvider 
+      value={{
+        soldProducts: sold,
+        updateSoldProducts: updateSoldProducts
+      }}
+    >
+      <div>
+        <Navbar />
+        <div className="App">
+          <Searchbar />
+            <Inventory 
+              loading={loading}
+              products={products}
+            />
+        </div>
+      </div>
+    </FavoriteProvider>
   );
 }
 
